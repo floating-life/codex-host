@@ -13,7 +13,7 @@ npm run build:rust
 
 ## Local Windows installation
 
-退出桌面后备份原文件，再替换构建产物，启动后检查 Renderer binding 和 Prompt Enhance 设置页。回滚只需恢复备份。详见 [Prompt Enhance 安装记录](prompt-enhance-installation.md)。
+退出桌面后备份原文件，再替换构建产物，启动后检查 Renderer binding 和 Prompt Enhance 设置页。回滚只需恢复备份。详见 [Prompt Enhance 使用与安装说明](prompt-enhance.md)。
 
 ## Configuration
 

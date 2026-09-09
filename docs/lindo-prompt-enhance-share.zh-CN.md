@@ -33,7 +33,7 @@ npm run build:typescript
 npm run build:renderer
 ```
 
-Windows 本地安装、配置和回滚说明见 [`docs/prompt-enhance-installation.md`](prompt-enhance-installation.md) 与 [`docs/deployment.md`](deployment.md)。第一次更新后需要完全退出并重新打开 CodexHost；之后修改增强设置不需要重启。Clash 虚拟网卡可能影响网关首响，建议保持已经验证可用的网络路径。
+Windows 本地安装、配置和回滚说明见 [`docs/prompt-enhance.md`](prompt-enhance.md) 与 [`docs/deployment.md`](deployment.md)。第一次更新后需要完全退出并重新打开 CodexHost；之后修改增强设置不需要重启。Clash 虚拟网卡可能影响网关首响，建议保持已经验证可用的网络路径。
 
 ## 当前完成情况
 
