@@ -302,6 +302,7 @@ describe("Renderer fixed Model request client", () => {
       "listSessionImportSources",
       "listThreadOwnership",
       "openHarnessWebUi",
+      "promptEnhanceRequest",
       "readUpdateStatus",
       "refreshCodexAccounts",
       "selectThreadModel",

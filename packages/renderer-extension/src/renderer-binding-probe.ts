@@ -79,6 +79,7 @@ import {
   routeRendererHarnessCommandSelection,
 } from "./renderer-harness-command-claim.js";
 import { installRendererSettingsLifecycle } from "./renderer-settings-lifecycle.js";
+import { installPromptEnhance } from "./renderer-prompt-enhance.js";
 import { openRendererThread } from "./renderer-fork-control.js";
 import type {
   RendererConnectionDiagnostics,
@@ -640,7 +641,48 @@ export function installRendererBindingProbe(
     getLocalAgent: localAgentForSidebarThread,
   });
   let connectionDiagnostics: RendererConnectionDiagnostics | null = null;
+  // Pin generation/cancellation to the same local connection across route changes.
+  const enhancementRequests = new Map<
+    string,
+    NonNullable<RendererModelClient["promptEnhanceRequest"]>
+  >();
+  const promptEnhance = installPromptEnhance({
+    ownerDocument: document,
+    async sendRequest(method, params) {
+      const id =
+        typeof params === "object" && params !== null && "requestId" in params
+          ? String(params.requestId)
+          : null;
+      const request =
+        (method.endsWith("/cancel") && id ? enhancementRequests.get(id) : null) ??
+        modelClientForHost("local")?.promptEnhanceRequest;
+      if (!request) throw new Error("Local Host Prompt Enhance is unavailable");
+      if (method.endsWith("/generate") && id) enhancementRequests.set(id, request);
+      try {
+        return await request(method, params);
+      } finally {
+        if (method.endsWith("/generate") && id) enhancementRequests.delete(id);
+      }
+    },
+    getContext(composer) {
+      if (!composer.isConnected) return null;
+      const target = findComposerModelTarget(composer);
+      if (!target) return null;
+      return {
+        taskId: JSON.stringify([activeModelHostId(), target]),
+        navigationKey: window.location.href,
+      };
+    },
+  });
   const settingsLifecycle = installRendererSettingsLifecycle(window, {
+    promptEnhance: {
+      sendRequest: async (method, params) => {
+        const request = modelClientForHost("local")?.promptEnhanceRequest;
+        if (!request) throw new Error("Local Host Prompt Enhance is unavailable");
+        return request(method, params);
+      },
+      getResult: () => promptEnhance.retainedResult,
+    },
     getUpdateClient: () => modelControl,
     getAccountClient: () => modelControl,
     getConnectionDiagnostics: () => connectionDiagnostics,
@@ -2782,6 +2824,7 @@ export function installRendererBindingProbe(
     dispose() {
       if (disposed) return;
       disposed = true;
+      promptEnhance.dispose();
       usageNotificationDispose?.();
       usageNotificationDispose = null;
       adapterDispose?.();

@@ -297,6 +297,26 @@ export type {
 } from "./updates.js";
 export { WORKSPACE_CONTRACT_VERSION } from "./version.js";
 
+export {
+  promptEnhanceModeSchema,
+  promptEnhanceProtocolSchema,
+  promptEnhanceCredentialModeSchema,
+  promptEnhanceConfigSchema,
+  promptEnhanceConfigWriteParamsSchema,
+  promptEnhanceConfigReadParamsSchema,
+  promptEnhanceGenerateParamsSchema,
+  promptEnhanceGenerateResultSchema,
+  promptEnhanceCancelParamsSchema,
+  promptEnhanceCancelResultSchema,
+} from "./prompt-enhance.js";
+export type {
+  PromptEnhanceConfig,
+  PromptEnhanceConfigWriteParams,
+  PromptEnhanceGenerateParams,
+  PromptEnhanceGenerateResult,
+  PromptEnhanceCancelParams,
+} from "./prompt-enhance.js";
+
 export const workspaceContractVersionSchema = z.literal(WORKSPACE_CONTRACT_VERSION);
 
 export const packageMetadata = {

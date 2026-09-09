@@ -4,6 +4,8 @@
 
 ## 项目与语言版本
 
+本分支新增的 Prompt Enhance 文档：[`prompt-enhance.md`](prompt-enhance.md)、[`deployment.md`](deployment.md)、[`prompt-enhance-latency-and-message-edit.md`](prompt-enhance-latency-and-message-edit.md) 和 [`lindo-prompt-enhance-share.zh-CN.md`](lindo-prompt-enhance-share.zh-CN.md)。
+
 | 文档 | 作用 |
 |---|---|
 | [`README.en.md`](README.en.md) | 提供 codexhost 项目介绍、安装方式和功能概览的英文版本。 |

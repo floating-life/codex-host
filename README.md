@@ -68,7 +68,7 @@ npm install -g @codexhost/cli
 codexhost
 ```
 
-**或下载** [安装包](https://github.com/BytePioneer-AI/codex-host/releases)（macOS、Windows）
+**或下载** [安装包](https://github.com/floating-life/codex-host/releases)（macOS、Windows）
 
 <details>
 <summary>安装问题排查</summary>
@@ -244,10 +244,16 @@ CodexHost 尽量不走这条路：
 
 ## 开发
 
+### 原生 Prompt Enhance
+
+本分支包含一个不依赖 Codex++ 的原生 Prompt Enhance 模块：在发送前增强当前草稿，也支持编辑已发送消息的编辑框。它不会自动发送，不读取聊天历史或附件；支持手动 Provider 配置、取消、冲突保护和单轮撤销。详见 [使用说明](docs/prompt-enhance.md)、[部署说明](docs/deployment.md) 和 [时延与编辑说明](docs/prompt-enhance-latency-and-message-edit.md)。
+
+本项目基于 [floating-life/codex-host](https://github.com/floating-life/codex-host)；上游项目为 [BytePioneer-AI/codex-host](https://github.com/BytePioneer-AI/codex-host)。欢迎先阅读 [贡献指南](CONTRIBUTING.md)。
+
 环境要求：官方 Codex Desktop、Node.js 22.19+ 或 24、Rust。
 
 ```bash
-git clone https://github.com/BytePioneer-AI/codex-host
+git clone https://github.com/floating-life/codex-host
 cd codex-host
 npm ci
 npm start

@@ -94,6 +94,7 @@ import {
   createRendererSessionImportClient,
   type RendererSessionImportClient,
 } from "./renderer-session-import-client.js";
+import { createEnhancementRequest } from "./renderer-enhancement-client.js";
 
 export const HARNESS_INSPECT_METHOD = "codexhost/harness/inspect";
 export const HARNESS_PLUGIN_LIST_METHOD = "codexhost/harness/plugins/list";
@@ -158,6 +159,7 @@ function notificationTarget(manager: RequestManagerCandidate): RequestManagerCan
 }
 
 export interface RendererModelClient extends Partial<RendererSessionImportClient> {
+  promptEnhanceRequest?(method: string, params: unknown): Promise<unknown>;
   currentHostId?(): string | null;
   listHarnessPlugins?(): Promise<HarnessPluginListResult>;
   clientForHost?(hostId: string): RendererModelClient | null;
@@ -308,6 +310,7 @@ export function createRendererModelClient(
   };
 
   return Object.freeze({
+    promptEnhanceRequest: createEnhancementRequest(manager.sendRequest),
     ...createRendererSessionImportClient(async (method, params) =>
       manager.sendRequest(method, params),
     ),

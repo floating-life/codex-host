@@ -72,6 +72,13 @@ import {
   updateEmptyParamsSchema,
   updateStartResultSchema,
   updateStatusResultSchema,
+  promptEnhanceCancelParamsSchema,
+  promptEnhanceCancelResultSchema,
+  promptEnhanceConfigReadParamsSchema,
+  promptEnhanceConfigSchema,
+  promptEnhanceConfigWriteParamsSchema,
+  promptEnhanceGenerateParamsSchema,
+  promptEnhanceGenerateResultSchema,
   type AccountCreditsSnapshot,
   type HarnessModelRef,
   type HarnessPermissionModeId,
@@ -147,6 +154,7 @@ import {
 } from "./codex-runtime/codex-runtime-pool.js";
 import { aggregateOfficialAccountThreadListPage } from "./multi-account-thread-list.js";
 import type { HostUpdateCoordinator } from "./update-coordinator.js";
+import { PromptEnhanceService } from "./prompt-enhance.js";
 
 const SUBAGENT_TERMINAL_REFRESH_DELAYS_MS = [0, 50, 100, 150] as const;
 const THREAD_USAGE_UPDATED_METHOD = "codexhost/thread/usage/updated";
@@ -494,6 +502,8 @@ export class AppServerHost {
   #accountRepository: AccountRepositoryLike;
   #threadAccountStore: ThreadAccountStoreLike;
   #accountDataDirectory: string;
+  #promptEnhance: PromptEnhanceService;
+  readonly #promptEnhanceOwnerPrefix = randomUUID();
   #externalAdapters: Map<ExternalHarnessId, HarnessAdapter>;
   #pluginDescriptors: HarnessPluginDescriptor[] = [];
   #accountInspection: Promise<HarnessAccountListResult> | null = null;
@@ -563,6 +573,7 @@ export class AppServerHost {
     this.#accountRepository = accountRepository;
     this.#threadAccountStore = threadAccountStore;
     this.#accountDataDirectory = dataDirectory;
+    this.#promptEnhance = new PromptEnhanceService({ dataDirectory, environment });
     this.#codexRuntimePool = new CodexRuntimePool({
       accounts: accountRepository,
       threadAccounts: threadAccountStore,
@@ -633,6 +644,7 @@ export class AppServerHost {
   close(): void {
     if (this.#closeRequested) return;
     this.#closeRequested = true;
+    this.#promptEnhance.close();
     this.#externalSteering.close();
     this.#signalActiveWorkChanged();
     this.#options.desktopInput.destroy();
@@ -642,6 +654,7 @@ export class AppServerHost {
   disconnect(): void {
     if (this.#closeRequested || this.#desktopInputEnded || this.#drainActiveWorkOnInputEnd) return;
     this.#drainActiveWorkOnInputEnd = true;
+    this.#promptEnhance.close();
     this.#externalSteering.close();
     const desktopInput = this.#options.desktopInput as Readable & { end?: () => void };
     if (typeof desktopInput.end === "function") desktopInput.end();
@@ -664,7 +677,11 @@ export class AppServerHost {
         this.#pluginDescriptors = plugins.list();
         for (const [id, adapter] of plugins.adapters) this.#externalAdapters.set(id, adapter);
       }
-      await Promise.all([this.#repository.initialize(), this.#codexRuntimePool.initialize()]);
+      await Promise.all([
+        this.#repository.initialize(),
+        this.#codexRuntimePool.initialize(),
+        this.#promptEnhance.initialize(),
+      ]);
     } catch (error) {
       this.#diagnose(`Host initialization failed: ${errorMessage(error)}`);
       await Promise.allSettled(
@@ -709,6 +726,7 @@ export class AppServerHost {
       await this.#codexRuntimePool.close();
       return this.#closeRequested ? 0 : 1;
     } finally {
+      this.#promptEnhance.close();
       this.#externalSteering.close();
       const threads = this.#externalRuntime.values();
       await Promise.allSettled(threads.map(({ session }) => session.close()));
@@ -827,6 +845,15 @@ export class AppServerHost {
         request.method === "codexhost/account/login/cancel"
       ) {
         this.#dispatchDesktopRequest(() => this.#handleCodexAccountRequest(request));
+        continue;
+      }
+      if (
+        request.method === "codexhost/prompt-enhance/config/read" ||
+        request.method === "codexhost/prompt-enhance/config/write" ||
+        request.method === "codexhost/prompt-enhance/generate" ||
+        request.method === "codexhost/prompt-enhance/cancel"
+      ) {
+        this.#dispatchDesktopRequest(() => this.#handlePromptEnhanceRequest(request));
         continue;
       }
       if (request.method === "codexhost/harness/accounts/list") {
@@ -2375,6 +2402,87 @@ export class AppServerHost {
     } catch (error) {
       await this.#writer.json(rpcError(request, -32091, errorMessage(error).slice(0, 500)));
     }
+  }
+
+  async #handlePromptEnhanceRequest(request: JsonRpcRequest): Promise<void> {
+    try {
+      if (request.method === "codexhost/prompt-enhance/config/read") {
+        if (!promptEnhanceConfigReadParamsSchema.safeParse(request.params ?? {}).success) {
+          await this.#writer.json(
+            rpcError(request, -32602, "Invalid prompt enhance config read params"),
+          );
+          return;
+        }
+        await this.#writer.json(
+          rpcEnvelope(request, {
+            result: jsonValueSchema.parse(
+              promptEnhanceConfigSchema.parse(this.#promptEnhance.readConfig()),
+            ),
+          }),
+        );
+        return;
+      }
+      if (request.method === "codexhost/prompt-enhance/config/write") {
+        const params = promptEnhanceConfigWriteParamsSchema.safeParse(request.params);
+        if (!params.success) {
+          await this.#writer.json(
+            rpcError(request, -32602, "Invalid prompt enhance config write params"),
+          );
+          return;
+        }
+        const result = promptEnhanceConfigSchema.parse(
+          await this.#promptEnhance.writeConfig(params.data),
+        );
+        await this.#writer.json(rpcEnvelope(request, { result: jsonValueSchema.parse(result) }));
+        return;
+      }
+      if (request.method === "codexhost/prompt-enhance/generate") {
+        const params = promptEnhanceGenerateParamsSchema.safeParse(request.params);
+        if (!params.success) {
+          await this.#writer.json(
+            rpcError(request, -32602, "Invalid prompt enhance generate params"),
+          );
+          return;
+        }
+        const result = await this.#promptEnhance.generate({
+          ...params.data,
+          ownerId: this.#promptEnhanceOwner(params.data.ownerId),
+        });
+        await this.#writer.json(
+          rpcEnvelope(request, {
+            result: jsonValueSchema.parse(promptEnhanceGenerateResultSchema.parse(result)),
+          }),
+        );
+        return;
+      }
+      const params = promptEnhanceCancelParamsSchema.safeParse(request.params);
+      if (!params.success) {
+        await this.#writer.json(rpcError(request, -32602, "Invalid prompt enhance cancel params"));
+        return;
+      }
+      const cancelled = this.#promptEnhance.cancel(
+        this.#promptEnhanceOwner(params.data.ownerId),
+        params.data.requestId,
+      );
+      await this.#writer.json(
+        rpcEnvelope(request, {
+          result: jsonValueSchema.parse(promptEnhanceCancelResultSchema.parse({ cancelled })),
+        }),
+      );
+    } catch (error) {
+      await this.#writer.json(rpcError(request, -32092, this.#safePromptEnhanceError(error)));
+    }
+  }
+
+  #promptEnhanceOwner(ownerId: string): string {
+    return `${this.#promptEnhanceOwnerPrefix}:${ownerId}`;
+  }
+
+  #safePromptEnhanceError(error: unknown): string {
+    const message = errorMessage(error)
+      .replace(/Bearer\s+\S+/gi, "Bearer [redacted]")
+      .replace(/sk-[A-Za-z0-9_-]+/g, "[redacted]");
+    return message.slice(0, 500);
   }
 
   async #inspectHarness(request: JsonRpcRequest): Promise<void> {

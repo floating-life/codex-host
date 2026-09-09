@@ -99,6 +99,13 @@ export type {
   RemoteHostStatus,
 } from "./remote-host-lifecycle.js";
 export { createHostUpdateCoordinator } from "./update-coordinator.js";
+export { PromptEnhanceService } from "./prompt-enhance.js";
+export type {
+  PromptEnhanceConfig,
+  PromptEnhanceMode,
+  PromptEnhanceProtocol,
+  PromptEnhanceRequest,
+} from "./prompt-enhance.js";
 export type {
   CreateHostUpdateCoordinatorOptions,
   HostUpdateCoordinator,
