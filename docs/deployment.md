@@ -9,7 +9,7 @@ npm run build:renderer
 npm run build:rust
 ```
 
-使用 `npm start` 会停止匹配到的 Codex Desktop 和 CodexHost 开发进程，然后使用当前工作树启动；请先保存草稿和正在运行的任务。官方安装包构建使用仓库已有 release scripts；本地 Prompt Enhance 改动不会自动进入上游发布包。
+使用 `npm start` 会停止匹配到的 Codex Desktop 和 CodexHost 开发进程，然后使用当前工作树启动；请先保存草稿和正在运行的任务。官方安装包构建使用仓库已有 release scripts；本地 Prompt Enhance 改动不会自动进入上游发布包。官方安装器升级也可能覆盖已安装的 Prompt Enhance bundle，升级后应按 [升级后恢复](prompt-enhance.md#升级后恢复) 重新部署并重启桌面。
 
 ## Local Windows installation
 
