@@ -26,6 +26,7 @@
   <a href="https://grok.com/"><img alt="Grok" src="https://img.shields.io/badge/Grok-000000?logo=x&logoColor=white" /></a>
   <a href="https://github.com/can1357/oh-my-pi"><img alt="Oh My Pi" src="docs/imgs/badge-omp-v5.svg" /></a>
   <a href="https://antigravity.google/product/antigravity-cli"><img alt="AGY" src="docs/imgs/badge-agy.svg" /></a>
+  <a href="https://kiro.dev/docs/cli/"><img alt="Kiro CLI" src="docs/imgs/badge-kiro.svg" /></a>
 </p>
 
 <p align="center">
@@ -92,6 +93,10 @@ xattr -dr com.apple.quarantine /Applications/codexhost.app
 然后完全退出 Codex Desktop，重新打开终端并启动 codexhost。
 
 </details>
+
+### 外观设置
+
+在 `设置 → 外观` 中可以开启 **换行显示思考文本**，让思考块中的长行自动换行。该选项默认关闭，选择保存在本机并立即生效，普通 Shell 输出不受影响。
 
 ### 交互展示
 

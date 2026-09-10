@@ -1,6 +1,6 @@
 # CodexHost 原生 Prompt Enhance
 
-本分支基于 `floating-life/codex-host` 的 v0.6.1（上游提交 `fd912b8`），不需要 Codex++。增强服务与当前执行任务的 Harness 独立。源代码改动不会自动安装到已运行的桌面进程。
+本分支基于 `floating-life/codex-host` 的 v0.6.2（上游提交 `c80c90d`），不需要 Codex++。增强服务与当前执行任务的 Harness 独立。源代码改动不会自动安装到已运行的桌面进程。
 
 ## 使用
 
@@ -30,7 +30,7 @@
 
 ## 升级后恢复
 
-官方 CodexHost 安装器升级时会重写 `app/host-runtime.mjs` 和 `app/renderer-extension.js`。启动器只读取这两个 canonical 文件；即使旧的增强 bundle 仍作为旁置文件存在，也不会被加载。因此升级后增强按钮消失属于安装文件被官方 bundle 覆盖，不是 API Key 或 Provider 配置丢失。
+官方 CodexHost 安装器升级时会重写 `app/host-runtime.mjs` 和 `app/renderer-extension.js`。v0.6.2 已实际验证了这一点：启动器只读取这两个 canonical 文件；即使旧的增强 bundle 仍作为旁置文件存在，也不会被加载。因此升级后增强按钮消失属于安装文件被官方 bundle 覆盖，不是 API Key 或 Provider 配置丢失。
 
 恢复时退出 CodexHost，基于当前分支重新构建 Host/Renderer bundle，备份安装目录中的两个 canonical 文件后再替换，最后完全退出并重新打开 CodexHost。配置文件 `~/.codexhost/prompt-enhance.json` 会保留，但正在运行的进程不会自动重新加载新 bundle。若继续使用官方自动更新，后续版本仍可能再次覆盖本地 bundle；长期使用应从包含本模块的 fork 构建安装包，或在每次升级后重复上述恢复步骤。
 
